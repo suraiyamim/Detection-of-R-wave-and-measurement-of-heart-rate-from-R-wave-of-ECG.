@@ -1,0 +1,173 @@
+clc;
+clear all;
+load('rec_10m.mat');
+ 
+ECG=val(1:10000);
+figure (1)
+subplot 321;
+plot(ECG);
+title('noisy ECG signal');
+xlabel('time(ms)');
+ylabel('amplitude(mv)');
+ 
+%low pass filter
+fs=800;
+filterOrder = 10;
+cutoffFreq = 18;
+[b, a]=butter(filterOrder, cutoffFreq/(fs/2),'low');
+%== plot frequency response
+ 
+[h,w]=freqz(b,a);
+ 
+figure(2)
+subplot 211
+plot(w/pi*fs/2,abs(h),'-');
+title('low pass magnitude reesponse');
+title('high pass magnitude reesponse');
+xlabel('frequency(hz)');
+ylabel('gain(db)');
+grid on;
+ 
+%apply high pass filter
+ 
+ECG_highpass=filter(b,a,ECG);
+figure (1)
+subplot 323;
+plot(ECG_highpass(1:10000))
+title('noise removed');
+xlabel('time(ms)');
+ylabel('amplitude(mv)');
+ 
+%high pass filter design
+ 
+fs=800;
+filterOrder = 2;
+cutoffFreq = 4;
+[b, a]=butter(filterOrder, cutoffFreq/(fs/2),'high');
+ 
+%==plot frequency response
+[h,w]=freqz(b,a);
+ 
+figure(2)
+subplot 212
+plot(w/pi*fs/2,abs(h),'-');
+title('high pass magnitude response');
+title('high pass magnitude response');
+xlabel('frequency(hz)');
+ylabel('gain(db)');
+grid on;
+ 
+%apply low pass filter
+ECG_filtered=filter(b,a,ECG_highpass);
+figure (1)
+subplot 325 
+plot(ECG_filtered(1:10000));
+title('artifact removed');
+xlabel('time(ms)');
+ylabel('amplitude(mv)');
+ 
+%localize R wave
+[pks,locs]=findpeaks(ECG_filtered(1:end));
+threshold=2*(rms(ECG_filtered(1:end)));
+Rwave= pks>threshold;
+R_waveform=zeros(size((ECG_filtered(1:end))));
+R_waveform(locs(Rwave)) = max(ECG_filtered(1:end));
+figure(4)
+subplot 211;
+plot(ECG_filtered(1:end));
+hold on;
+stem(R_waveform,'r','*');
+title('location of R wave');
+xlabel('time(ms)');
+ylabel('amplitude(mv)');
+ 
+ 
+ %heartbeat calculation
+ Total_number_Beat= sum(Rwave)
+ Heart_rate = ( Total_number_Beat/10)*60
+  title(sprintf('locations of R wave \nHeart rate = %.2f bpm',Heart_rate));
+  
+  
+load('rec_15m.mat');
+ 
+ECG_01=val(1,:);
+figure (1)
+subplot 322;
+plot(ECG_01);
+title('noisy ECG signal');
+xlabel('time(ms)');
+ylabel('amplitude(mv)');
+ 
+%low pass filter
+fs=800;
+filterOrder = 10;
+cutoffFreq = 18;
+[b, a]=butter(filterOrder, cutoffFreq/(fs/2),'low');
+%== plot frequency response
+ 
+[h,w]=freqz(b,a);
+ 
+figure(3)
+subplot 211
+plot(w/pi*fs/2,abs(h),'-');
+title('low pass magnitude response');
+title('high pass magnitude response');
+xlabel('frequency(hz)');
+ylabel('gain(db)');
+grid on;
+ 
+ 
+ECG_highpass=filter(b,a,ECG_01);
+figure (1)
+subplot 324
+plot(ECG_highpass(1,:))
+title('noise removed');
+xlabel('time(ms)');
+ylabel('amplitude(mv)');
+%high pass filter design
+ 
+fs=800;
+filterOrder = 2;
+cutoffFreq = 10;
+[b, a]=butter(filterOrder, cutoffFreq/(fs/2),'high');
+ 
+%==plot frequency response
+[h,w]=freqz(b,a);
+ 
+figure(3)
+subplot 212
+plot(w/pi*fs/2,abs(h),'-');
+title('high pass magnitude reesponse');
+xlabel('frequency(hz)');
+ylabel('gain(db)');
+grid on;
+ 
+%apply low pass filter
+ECG_filtered=filter(b,a,ECG_highpass);
+figure (1)
+subplot 326
+plot(ECG_filtered(1,:));
+title('artifact removed');
+ 
+xlabel('time(ms)');
+ylabel('amplitude(mv)');
+ 
+%localize R wave
+[pks,locs]=findpeaks(ECG_filtered(1:end));
+threshold=2*(rms(ECG_filtered(1:end)));
+Rwave= pks>threshold;
+R_waveform=zeros(size((ECG_filtered(1:end))));
+R_waveform(locs(Rwave)) = max(ECG_filtered(1:end));
+figure(4)
+subplot 212;
+plot(ECG_filtered(1:end));
+hold on;
+stem(R_waveform,'r','*');
+title('location of R wave');
+xlabel('time(ms)');
+ylabel('amplitude(mv)');
+ %heartbeat calculation
+ Total_number_Beat= sum(Rwave)
+ Heart_rate = ( Total_number_Beat/5)*60
+ %stem(R_waveform,'r','*');
+ title(sprintf('locations of R wave \nHeart rate = %.2f bpm',Heart_rate));
